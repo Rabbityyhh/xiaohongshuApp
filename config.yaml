@@ -1,0 +1,114 @@
+# 小红书话题数据 → Notion 数据库 配置
+
+# ====== 默认搜索话题 ======
+# 可以通过命令行参数 --keyword 覆盖
+default_keyword: "韩系穿搭"
+
+# ====== 爬虫配置 ======
+crawler:
+  # 搜索结果排序方式: popularity(最热) | general(综合) | time(最新)
+  sort: "popularity"
+  # 最多获取的帖子数（搜索页滚动加载上限）
+  max_posts_to_fetch: 50
+  # 最终取 Top N 条写入 Notion
+  top_n: 10
+  # 页面加载等待时间（秒）
+  page_load_timeout: 30
+  # 滚动间隔（秒）
+  scroll_interval: 2
+
+# ====== Notion 数据库字段映射 ======
+# 以下字段名必须与你的 Notion 数据库列名完全一致
+notion_fields:
+  platform: "平台"           # Select
+  link: "链接"               # URL
+  title: "文案"              # Text (Title)
+  blogger_tags: "博主自定义标签"  # Multi-select
+  style: "穿搭风格"           # Multi-select
+  scene: "场景"              # Select
+  shoot_type: "拍摄类型"      # Multi-select
+  emotion: "情绪关键词"       # Multi-select
+  cover_desc: "封面"         # Text
+  bookmarks: "收藏数"         # Number
+  likes: "点赞数"             # Number
+  comments: "评论数"          # Number
+  bookmark_rate: "收藏率"     # Formula — Notion 自动计算，不写入
+  viral_analysis: "爆点分析（主观）"  # Text
+  blogger: "博主"            # URL
+  notes: "备注"              # Text
+
+# ====== AI 分析配置 ======
+analyzer:
+  # 使用的 DeepSeek 模型 (deepseek-chat 指向最新 V3 系列)
+  model: "deepseek-chat"
+  # 最大输出 token
+  max_tokens: 2000
+
+# ====== AI 分析用标签体系 ======
+# 这些标签来自你数据库中的已有数据，作为 AI 分析的候选值
+tag_system:
+  style_options:
+    - "轻熟"
+    - "韩系"
+    - "日系"
+    - "通勤"
+    - "极简"
+    - "松弛感"
+    - "高级感"
+    - "学院风"
+    - "运动休闲"
+    - "法式"
+    - "美式复古"
+    - "新中式"
+    - "街头"
+    - "优雅"
+    - "暗黑"
+
+  scene_options:
+    - "家里"
+    - "酒店"
+    - "公园"
+    - "咖啡厅"
+    - "街头"
+    - "办公室"
+    - "商场"
+    - "公共卫生间"
+    - "地铁/公交"
+    - "展览/美术馆"
+    - "户外郊野"
+    - "健身房"
+    - "学校"
+    - "餐厅"
+
+  shoot_type_options:
+    - "对镜自拍"
+    - "多角度"
+    - "露脸"
+    - "不露脸"
+    - "半身"
+    - "全身"
+    - "他人拍摄"
+    - "公园拍摄"
+    - "动态/视频"
+    - "静态/图片"
+    - "细节特写"
+    - "俯拍"
+    - "座位自拍"
+
+  emotion_options:
+    - "温柔"
+    - "气质"
+    - "精致"
+    - "干净"
+    - "松弛感"
+    - "有钱感"
+    - "普通人可复制"
+    - "通勤感"
+    - "氛围感"
+    - "显瘦"
+    - "酷"
+    - "元气"
+    - "甜美"
+    - "知性"
+    - "清冷"
+    - "辣妹"

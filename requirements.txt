@@ -1,0 +1,28 @@
+# 小红书话题数据 → Notion 数据库 自动分析工具
+# 依赖清单
+
+# Notion API
+notion-client>=2.2.0
+
+# 浏览器自动化
+playwright>=1.45.0
+playwright-stealth>=2.0.0
+
+# AI API (DeepSeek 使用 OpenAI 兼容接口)
+openai>=1.0.0
+
+# 配置管理
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# 数据处理
+pydantic>=2.0.0
+
+# Web 服务
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# 工具
+rich>=13.0.0          # 终端美化输出
+tenacity>=8.0.0       # 重试机制

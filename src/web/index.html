@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>小红书话题分析</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   Design System — Apple Human Interface inspired
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #f5f5f7;
+  --card-bg: rgba(255,255,255,0.72);
+  --card-border: rgba(0,0,0,0.06);
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --accent: #0077ED;
+  --accent-hover: #0070db;
+  --success: #34C759;
+  --warning: #FF9500;
+  --error: #FF3B30;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --radius-full: 980px;
+  --terminal-bg: #1c1c1e;
+  --terminal-text: #e5e5e7;
+  --transition: 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --card-bg: rgba(44,44,46,0.78);
+    --card-border: rgba(255,255,255,0.08);
+    --text: #f5f5f7;
+    --text-secondary: #98989d;
+    --text-tertiary: #636366;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow: 0 2px 16px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 48px rgba(0,0,0,0.4);
+    --terminal-bg: #000000;
+    --terminal-text: #e5e5e7;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Reset & Base
+   ═══════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* Subtle background grain */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,119,237,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Layout
+   ═══════════════════════════════════════════════════════════════════ */
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Header
+   ═══════════════════════════════════════════════════════════════════ */
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.header-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.header p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Card — Frosted Glass
+   ═══════════════════════════════════════════════════════════════════ */
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow), 0 0 0 0.5px var(--card-border);
+  padding: 28px 28px 24px;
+  margin-bottom: 20px;
+  transition: background var(--transition), box-shadow var(--transition);
+  animation: cardIn 0.45s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Input
+   ═══════════════════════════════════════════════════════════════════ */
+
+.input-group {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.input-group .icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: color var(--transition);
+}
+
+.input-group input {
+  width: 100%;
+  padding: 16px 16px 16px 46px;
+  font-size: 17px;
+  font-family: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,119,237,0.12);
+}
+
+.input-group input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Advanced Options — Collapsible
+   ═══════════════════════════════════════════════════════════════════ */
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 10px 4px;
+  user-select: none;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: color var(--transition);
+}
+
+.advanced-toggle:hover { color: var(--accent); }
+
+.advanced-toggle .chevron {
+  display: inline-block;
+  transition: transform var(--transition);
+  font-size: 10px;
+}
+
+.advanced-toggle.open .chevron { transform: rotate(90deg); }
+
+.advanced-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.2, 0, 0, 1),
+              opacity 0.3s ease,
+              padding 0.3s ease;
+}
+
+.advanced-panel.open {
+  max-height: 200px;
+  opacity: 1;
+  padding: 8px 0 12px;
+}
+
+.advanced-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  gap: 16px;
+}
+
+.advanced-row + .advanced-row {
+  border-top: 1px solid var(--card-border);
+}
+
+.advanced-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.advanced-sublabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 1px;
+}
+
+/* Toggle Switch — Apple style */
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle .slider {
+  position: absolute;
+  inset: 0;
+  background: #e0e0e5;
+  border-radius: 28px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+@media (prefers-color-scheme: dark) {
+  .toggle .slider { background: #3a3a3c; }
+}
+
+.toggle input:checked + .slider { background: var(--accent); }
+
+.toggle .slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: transform var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.toggle input:checked + .slider::after {
+  transform: translateX(20px);
+}
+
+/* Number input — compact stepper */
+.num-input {
+  width: 64px;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-family: "SF Mono", "Monaco", "Consolas", monospace;
+  text-align: center;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.num-input:focus { border-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 590;
+  padding: 12px 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,119,237,0.28);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 16px rgba(0,119,237,0.36);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-primary:disabled:hover { background: var(--accent); }
+
+.btn-secondary {
+  background: rgba(128,128,128,0.1);
+  color: var(--text);
+}
+.btn-secondary:hover { background: rgba(128,128,128,0.18); }
+
+.btn-danger {
+  background: rgba(255,59,48,0.12);
+  color: var(--error);
+}
+.btn-danger:hover { background: rgba(255,59,48,0.22); }
+
+/* Pulse animation for running state */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.btn-primary.running {
+  animation: pulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Timer */
+.timer {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-family: "SF Mono", "Monaco", "Consolas", monospace;
+  padding: 12px 0;
+  display: none;
+}
+.timer.visible { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Progress Steps
+   ═══════════════════════════════════════════════════════════════════ */
+
+.progress-steps {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.step-dot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(128,128,128,0.06);
+  transition: all var(--transition);
+}
+
+.step-dot .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.step-dot.active {
+  color: var(--accent);
+  background: rgba(0,119,237,0.08);
+}
+.step-dot.active .dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,119,237,0.18);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.step-dot.done {
+  color: var(--success);
+  background: rgba(52,199,89,0.08);
+}
+.step-dot.done .dot { background: var(--success); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Terminal / Log Viewer
+   ═══════════════════════════════════════════════════════════════════ */
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.terminal-dot.red    { background: #FF5F57; }
+.terminal-dot.yellow { background: #FFBD2E; }
+.terminal-dot.green  { background: #28C840; }
+
+.terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-action {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(128,128,128,0.08);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+.terminal-action:hover {
+  background: rgba(128,128,128,0.16);
+  color: var(--text);
+}
+
+.log-viewer {
+  background: var(--terminal-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  max-height: 360px;
+  overflow-y: auto;
+  font-family: "SF Mono", "Monaco", "Menlo", "Consolas", monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  scroll-behavior: smooth;
+}
+
+.log-viewer:empty::after {
+  content: '日志将在此实时显示...';
+  color: #636366;
+}
+
+.log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  animation: logIn 0.25s ease-out;
+  padding: 1px 0;
+}
+
+@keyframes logIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.log-line .time  { color: #636366; margin-right: 8px; }
+.log-line .level { font-weight: 600; margin-right: 6px; }
+.log-line.info    { color: #e5e5e7; }
+.log-line.warning { color: #FFBD2E; }
+.log-line.error   { color: #FF5F57; }
+.log-line.success,
+.log-line.info:has(.level-success) { color: #28C840; }
+
+/* Log level pills */
+.log-level {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.log-level.info    { background: rgba(255,255,255,0.1); color: #98989d; }
+.log-level.warning { background: rgba(255,189,46,0.15); color: #FFBD2E; }
+.log-level.error   { background: rgba(255,95,87,0.15); color: #FF5F57; }
+.log-level.success { background: rgba(40,200,64,0.15); color: #28C840; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Results Summary
+   ═══════════════════════════════════════════════════════════════════ */
+
+.results-card {
+  display: none;
+  animation: cardIn 0.5s cubic-bezier(0.2, 0, 0, 1);
+}
+.results-card.visible { display: block; }
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.result-stat {
+  text-align: center;
+  padding: 16px 12px;
+  background: rgba(128,128,128,0.04);
+  border-radius: var(--radius);
+}
+
+.result-stat .value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.result-stat .label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.result-stat.created .value { color: var(--success); }
+.result-stat.updated .value { color: var(--accent); }
+.result-stat.posts   .value { color: var(--text); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Keyword History Dropdown
+   ═══════════════════════════════════════════════════════════════════ */
+
+.history-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg), 0 0 0 0.5px var(--card-border);
+  z-index: 10;
+  overflow: hidden;
+  display: none;
+}
+
+.history-dropdown.open { display: block; }
+
+.history-item {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background var(--transition);
+}
+.history-item:hover { background: rgba(0,119,237,0.06); }
+.history-item .time-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .container { padding: 20px 14px 60px; }
+  .card { padding: 20px 18px 18px; border-radius: var(--radius); }
+  .header h1 { font-size: 24px; }
+  .progress-steps { gap: 2px; }
+  .step-dot { font-size: 11px; padding: 5px 8px; }
+  .log-viewer { max-height: 280px; font-size: 12px; }
+  .btn-row { flex-direction: column; }
+  .btn { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ═══ Header ═══ -->
+  <header class="header">
+    <span class="header-icon">📊</span>
+    <h1>小红书话题分析</h1>
+    <p>输入关键词，自动爬取热门穿搭 → AI 分析 → 写入 Notion</p>
+  </header>
+
+  <!-- ═══ Control Card ═══ -->
+  <div class="card" id="control-card">
+    <div class="card-header">
+      <span>🎯</span> 搜索关键词
+    </div>
+
+    <div class="input-group" id="input-group">
+      <span class="icon">🔍</span>
+      <input
+        type="text"
+        id="keyword"
+        placeholder="例如：韩系穿搭、通勤穿搭、夏日ootd..."
+        autocomplete="off"
+        autofocus
+      >
+      <div class="history-dropdown" id="history-dropdown"></div>
+    </div>
+
+    <!-- Advanced Options Toggle -->
+    <button class="advanced-toggle" id="advanced-toggle" type="button">
+      <span class="chevron">▶</span> 高级选项
+    </button>
+
+    <div class="advanced-panel" id="advanced-panel">
+      <div class="advanced-row">
+        <div>
+          <span class="advanced-label">获取数量</span>
+          <span class="advanced-sublabel">搜索结果的 Top N 条帖子</span>
+        </div>
+        <input type="number" class="num-input" id="top-n" value="10" min="1" max="30">
+      </div>
+      <div class="advanced-row">
+        <div>
+          <span class="advanced-label">后台模式</span>
+          <span class="advanced-sublabel">不显示浏览器窗口</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="headless">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="advanced-row">
+        <div>
+          <span class="advanced-label">跳过 Notion</span>
+          <span class="advanced-sublabel">仅测试爬虫 + AI 分析</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="skip-notion">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-start">
+        <span>▶</span> 开始分析
+      </button>
+      <button class="btn btn-danger" id="btn-stop" style="display:none;">
+        <span>⏹</span> 停止
+      </button>
+    </div>
+
+    <div class="timer" id="timer">⏱ 00:00</div>
+  </div>
+
+  <!-- ═══ Progress Steps ═══ -->
+  <div class="card" id="progress-card" style="display:none;">
+    <div class="card-header">
+      <span>📋</span> 运行进度
+    </div>
+    <div class="progress-steps" id="progress-steps">
+      <span class="step-dot" data-step="config">  <span class="dot"></span>检查配置</span>
+      <span class="step-dot" data-step="browser"><span class="dot"></span>启动浏览器</span>
+      <span class="step-dot" data-step="search"> <span class="dot"></span>搜索话题</span>
+      <span class="step-dot" data-step="parse">  <span class="dot"></span>解析帖子</span>
+      <span class="step-dot" data-step="analyze"><span class="dot"></span>AI 分析</span>
+      <span class="step-dot" data-step="notion"> <span class="dot"></span>写入 Notion</span>
+    </div>
+  </div>
+
+  <!-- ═══ Terminal / Log Viewer ═══ -->
+  <div class="card" id="log-card" style="display:none;">
+    <div class="terminal-header">
+      <div class="terminal-dots">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+      </div>
+      <div class="terminal-actions">
+        <button class="terminal-action" id="btn-copy-log" title="复制日志">📋 复制</button>
+        <button class="terminal-action" id="btn-clear-log" title="清空日志">🗑 清空</button>
+      </div>
+    </div>
+    <div class="log-viewer" id="log-viewer"></div>
+  </div>
+
+  <!-- ═══ Results Summary ═══ -->
+  <div class="card results-card" id="results-card">
+    <div class="card-header">
+      <span>✅</span> 分析完成
+    </div>
+    <div class="results-grid" id="results-grid"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Scripts
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── DOM refs ───────────────────────────────────────────────── */
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  const keywordInput   = $('#keyword');
+  const btnStart       = $('#btn-start');
+  const btnStop        = $('#btn-stop');
+  const btnCopyLog     = $('#btn-copy-log');
+  const btnClearLog    = $('#btn-clear-log');
+  const timerEl        = $('#timer');
+  const progressCard   = $('#progress-card');
+  const progressSteps  = $('#progress-steps');
+  const logCard        = $('#log-card');
+  const logViewer      = $('#log-viewer');
+  const resultsCard    = $('#results-card');
+  const resultsGrid    = $('#results-grid');
+  const advancedToggle = $('#advanced-toggle');
+  const advancedPanel  = $('#advanced-panel');
+  const historyDropdown = $('#history-dropdown');
+  const topNInput      = $('#top-n');
+  const headlessCheck  = $('#headless');
+  const skipNotionCheck = $('#skip-notion');
+
+  /* ── State ──────────────────────────────────────────────────── */
+  const state = {
+    runId: null,
+    running: false,
+    logs: [],
+    eventSource: null,
+    timerInterval: null,
+    startTime: null,
+    keywordHistory: [],
+  };
+
+  /* ── Keyword History ────────────────────────────────────────── */
+  try {
+    state.keywordHistory = JSON.parse(localStorage.getItem('xhs_keyword_history') || '[]');
+  } catch (_) { state.keywordHistory = []; }
+
+  function saveKeywordHistory(kw) {
+    if (!kw.trim()) return;
+    state.keywordHistory = [
+      kw,
+      ...state.keywordHistory.filter(k => k !== kw)
+    ].slice(0, 5);
+    try { localStorage.setItem('xhs_keyword_history', JSON.stringify(state.keywordHistory)); } catch (_) {}
+  }
+
+  function renderHistory() {
+    historyDropdown.innerHTML = '';
+    if (state.keywordHistory.length === 0) return;
+    state.keywordHistory.forEach((kw, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'history-item';
+      btn.innerHTML = `<span>🕐</span> ${escapeHtml(kw)}`;
+      btn.addEventListener('click', () => {
+        keywordInput.value = kw;
+        historyDropdown.classList.remove('open');
+        keywordInput.focus();
+      });
+      historyDropdown.appendChild(btn);
+    });
+  }
+
+  /* ── Advanced Options Toggle ───────────────────────────────── */
+  advancedToggle.addEventListener('click', () => {
+    const open = advancedPanel.classList.toggle('open');
+    advancedToggle.classList.toggle('open', open);
+  });
+
+  /* ── Timer ──────────────────────────────────────────────────── */
+  function startTimer() {
+    state.startTime = Date.now();
+    timerEl.classList.add('visible');
+    state.timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      timerEl.textContent = `⏱ ${m}:${s}`;
+    }, 250);
+  }
+
+  function stopTimer() {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+
+  /* ── Progress Steps ─────────────────────────────────────────── */
+  const STEP_ORDER = ['config', 'browser', 'search', 'parse', 'analyze', 'notion'];
+  let currentStepIdx = -1;
+
+  function setActiveStep(stepKey) {
+    const idx = STEP_ORDER.indexOf(stepKey);
+    if (idx < 0) return;
+
+    // Mark all previous steps as done
+    for (let i = 0; i < idx; i++) {
+      const el = progressSteps.querySelector(`[data-step="${STEP_ORDER[i]}"]`);
+      if (el) { el.classList.remove('active'); el.classList.add('done'); }
+    }
+    // Mark current step as active
+    currentStepIdx = idx;
+    const el = progressSteps.querySelector(`[data-step="${stepKey}"]`);
+    if (el) { el.classList.remove('done'); el.classList.add('active'); }
+  }
+
+  function markAllStepsDone() {
+    $$('.step-dot').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+  }
+
+  /* ── Log Viewer ─────────────────────────────────────────────── */
+  function addLog(level, message, time) {
+    state.logs.push({ level, message, time });
+    const line = document.createElement('div');
+    line.className = `log-line ${level.toLowerCase()}`;
+
+    const levelClass = level.toLowerCase();
+    let levelLabel = level;
+    if (level === 'WARNING') levelLabel = 'WARN';
+    if (level === 'INFO') levelLabel = 'INFO';
+
+    line.innerHTML =
+      `<span class="time">${escapeHtml(time || '')}</span>` +
+      `<span class="log-level ${levelClass}">${levelLabel}</span>` +
+      escapeHtml(message);
+
+    logViewer.appendChild(line);
+    logViewer.scrollTop = logViewer.scrollHeight;
+  }
+
+  function clearLogs() {
+    state.logs = [];
+    logViewer.innerHTML = '';
+  }
+
+  /* ── SSE Event Handling ─────────────────────────────────────── */
+  function handleSSEEvent(data) {
+    switch (data.type) {
+      case 'log':
+        addLog(data.level || 'INFO', data.message, data.time);
+        break;
+
+      case 'step':
+        if (data.status === 'start') {
+          setActiveStep(data.step);
+        } else if (data.status === 'done') {
+          // step completion is handled when the next step starts
+        }
+        break;
+
+      case 'done':
+        markAllStepsDone();
+        stopTimer();
+        state.running = false;
+        updateUI();
+
+        // Show results if available
+        if (data.stats) {
+          showResults(data.stats);
+        }
+        addLog('SUCCESS', '✅ 任务完成！', data.time);
+        break;
+
+      case 'error':
+        stopTimer();
+        state.running = false;
+        updateUI();
+        addLog('ERROR', `❌ ${data.message}`, data.time);
+        break;
+    }
+  }
+
+  /* ── Results ────────────────────────────────────────────────── */
+  function showResults(stats) {
+    resultsCard.classList.add('visible');
+    const items = [];
+    if (stats.total_posts != null) {
+      items.push({ cls: 'posts', value: stats.total_posts, label: '帖子总数' });
+    }
+    if (stats.created != null) {
+      items.push({ cls: 'created', value: stats.created, label: 'Notion 新建' });
+    }
+    if (stats.updated != null) {
+      items.push({ cls: 'updated', value: stats.updated, label: 'Notion 更新' });
+    }
+    if (items.length === 0) {
+      items.push({ cls: 'posts', value: '✓', label: '已完成' });
+    }
+    resultsGrid.innerHTML = items.map(i =>
+      `<div class="result-stat ${i.cls}"><div class="value">${i.value}</div><div class="label">${i.label}</div></div>`
+    ).join('');
+  }
+
+  /* ── Start / Stop ───────────────────────────────────────────── */
+  async function startRun() {
+    const keyword = keywordInput.value.trim();
+    if (!keyword) {
+      keywordInput.focus();
+      keywordInput.style.borderColor = 'var(--error)';
+      setTimeout(() => { keywordInput.style.borderColor = ''; }, 1500);
+      return;
+    }
+    if (state.running) return;
+
+    // Save to history
+    saveKeywordHistory(keyword);
+    renderHistory();
+
+    // Reset UI
+    state.running = true;
+    state.logs = [];
+    clearLogs();
+    resultsCard.classList.remove('visible');
+    resultsGrid.innerHTML = '';
+    logViewer.innerHTML = '';
+    $$('.step-dot').forEach(el => { el.classList.remove('active', 'done'); });
+    currentStepIdx = -1;
+    progressCard.style.display = 'block';
+    logCard.style.display = 'block';
+    updateUI();
+    startTimer();
+
+    const topN = parseInt(topNInput.value) || 10;
+    const headless = headlessCheck.checked;
+    const skipNotion = skipNotionCheck.checked;
+
+    try {
+      // 1. Start the run
+      const formData = new URLSearchParams();
+      formData.append('keyword', keyword);
+      formData.append('top_n', String(topN));
+      formData.append('headless', String(headless));
+      formData.append('skip_notion', String(skipNotion));
+
+      const resp = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData,
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || `HTTP ${resp.status}`);
+      }
+
+      const { run_id } = await resp.json();
+      state.runId = run_id;
+
+      // 2. Connect SSE
+      state.eventSource = new EventSource(`/api/run/${run_id}/stream`);
+      state.eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleSSEEvent(data);
+          // Auto-close on completion
+          if (data.type === 'stream_end') {
+            state.eventSource.close();
+            state.eventSource = null;
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      };
+      state.eventSource.onerror = () => {
+        // SSE connection lost — run might still be going, but we can't recover stream
+        if (state.running) {
+          addLog('WARNING', '⚠ 日志连接中断，任务可能仍在后台运行', '');
+        }
+        if (state.eventSource) {
+          state.eventSource.close();
+          state.eventSource = null;
+        }
+        stopTimer();
+        state.running = false;
+        updateUI();
+      };
+    } catch (err) {
+      stopTimer();
+      state.running = false;
+      updateUI();
+      addLog('ERROR', `启动失败: ${err.message}`, '');
+    }
+  }
+
+  async function stopRun() {
+    if (!state.runId) return;
+    try {
+      await fetch(`/api/run/${state.runId}/stop`, { method: 'POST' });
+      addLog('WARNING', '⏹ 正在停止任务...', '');
+    } catch (_) {}
+    // SSE will handle the actual stop notification
+  }
+
+  /* ── UI State ───────────────────────────────────────────────── */
+  function updateUI() {
+    if (state.running) {
+      btnStart.querySelector('span').textContent = '⟳';
+      btnStart.childNodes[1] && (btnStart.childNodes[1].textContent = ' 运行中...');
+      btnStart.classList.add('running');
+      btnStart.disabled = true;
+      btnStop.style.display = '';
+      keywordInput.disabled = true;
+      topNInput.disabled = true;
+      headlessCheck.disabled = true;
+      skipNotionCheck.disabled = true;
+    } else {
+      btnStart.querySelector('span').textContent = '▶';
+      btnStart.childNodes[1] && (btnStart.childNodes[1].textContent = ' 开始分析');
+      btnStart.classList.remove('running');
+      btnStart.disabled = false;
+      btnStop.style.display = 'none';
+      keywordInput.disabled = false;
+      topNInput.disabled = false;
+      headlessCheck.disabled = false;
+      skipNotionCheck.disabled = false;
+    }
+  }
+
+  /* ── Event Listeners ────────────────────────────────────────── */
+  btnStart.addEventListener('click', startRun);
+  btnStop.addEventListener('click', stopRun);
+
+  btnClearLog.addEventListener('click', () => {
+    clearLogs();
+    addLog('INFO', '日志已清空', '');
+  });
+
+  btnCopyLog.addEventListener('click', () => {
+    const text = state.logs.map(l => `[${l.time}] [${l.level}] ${l.message}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btnCopyLog.textContent;
+      btnCopyLog.textContent = '✓ 已复制';
+      setTimeout(() => { btnCopyLog.textContent = orig; }, 1500);
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement === keywordInput) {
+      e.preventDefault();
+      startRun();
+    }
+    if (e.key === 'Escape' && state.running) {
+      e.preventDefault();
+      stopRun();
+    }
+  });
+
+  // Keyword input: show history on focus
+  keywordInput.addEventListener('focus', () => {
+    if (state.keywordHistory.length > 0 && !state.running) {
+      renderHistory();
+      historyDropdown.classList.add('open');
+    }
+  });
+  keywordInput.addEventListener('blur', () => {
+    setTimeout(() => historyDropdown.classList.remove('open'), 150);
+  });
+  keywordInput.addEventListener('input', () => {
+    historyDropdown.classList.remove('open');
+  });
+
+  // History dropdown click handling
+  historyDropdown.addEventListener('mousedown', (e) => e.preventDefault());
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  renderHistory();
+})();
+</script>
+
+</body>
+</html>
